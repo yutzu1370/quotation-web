@@ -205,13 +205,16 @@
 
     function generateQuoteNumber() {
       const now = new Date();
-      const date = now.toISOString().slice(0,10).replace(/-/g,'');
+      const date = formatDate(now).replace(/-/g,'');
       const rand = Math.random().toString(36).substring(2,6).toUpperCase();
       return `QT-${date}-${rand}`;
     }
 
     function formatDate(d) {
-      return d.toISOString().slice(0,10);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
     }
 
     // 主題切換
@@ -273,8 +276,8 @@
       let subtotal = 0;
       document.querySelectorAll('#itemsList > div').forEach(row => {
         const inputs = row.querySelectorAll('input[type="number"]');
-        const qty = parseFloat(inputs[0]?.value) || 0;
-        const price = parseFloat(inputs[1]?.value) || 0;
+        const qty = Math.max(0, parseFloat(inputs[0]?.value) || 0);
+        const price = Math.max(0, parseFloat(inputs[1]?.value) || 0);
         const lineTotal = qty * price;
         subtotal += lineTotal;
         const label = row.querySelector('.item-subtotal');
@@ -285,7 +288,7 @@
       const tax = subtotal * taxRate;
       const total = subtotal + tax;
 
-      document.getElementById('subtotalDisplay').textContent = `NT$ ${subtotal.toLocaleString()}`;
+      document.getElementById('subtotalDisplay').textContent = `NT$ ${Math.round(subtotal).toLocaleString()}`;
       document.getElementById('taxDisplay').textContent = `NT$ ${Math.round(tax).toLocaleString()}`;
       document.getElementById('totalDisplay').textContent = `NT$ ${Math.round(total).toLocaleString()}`;
     }
