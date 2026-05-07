@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>報價單產生器</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {} }
+    }
+  </script>
+  <style>
+    @media print {
+      .no-print { display: none !important; }
+      body { background: white !important; }
+      .print-shadow { box-shadow: none !important; }
+      html { color-scheme: light; }
+      .dark { color-scheme: light; }
+      .dark body,
+      .dark .bg-gray-900 { background-color: white !important; color: black !important; }
+      .dark .bg-gray-800 { background-color: white !important; }
+      .dark .text-gray-100, .dark .text-white { color: black !important; }
+      .dark .text-gray-300, .dark .text-gray-400 { color: #333 !important; }
+      .dark .border-gray-700 { border-color: #ddd !important; }
+      .dark .bg-gray-700 { background-color: #f9f9f9 !important; }
+      .dark input, .dark select, .dark textarea {
+        background-color: white !important;
+        color: black !important;
+        border-color: #ccc !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen transition-colors duration-200">
+
+  <!-- 頂部工具列 -->
+  <header class="no-print bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-10">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+      <h1 class="text-lg font-bold text-blue-600 dark:text-blue-400">📋 報價單產生器</h1>
+      <div class="flex gap-2">
+        <button onclick="toggleTheme()" class="px-3 py-1.5 rounded-lg text-sm bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+          <span id="themeIcon">🌙</span>
+        </button>
+        <button onclick="resetForm()" class="no-print px-3 py-1.5 rounded-lg text-sm bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+          重置
+        </button>
+        <button onclick="window.print()" class="no-print px-4 py-1.5 rounded-lg text-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors font-medium">
+          🖨️ 列印 / 存 PDF
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主體 -->
+  <main class="max-w-4xl mx-auto px-4 py-8">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg print-shadow p-8 space-y-8">
+
+      <!-- 報價單標題區 -->
+      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+        <div>
+          <h2 class="text-3xl font-extrabold text-gray-800 dark:text-white tracking-tight">報 價 單</h2>
+          <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">QUOTATION</p>
+        </div>
+        <div class="text-right space-y-1">
+          <div class="flex items-center gap-2 justify-end">
+            <span class="text-xs text-gray-400 dark:text-gray-500">編號</span>
+            <span id="quoteNumber" class="font-mono text-sm font-bold text-blue-600 dark:text-blue-400"></span>
+          </div>
+          <div class="flex items-center gap-2 justify-end">
+            <span class="text-xs text-gray-400 dark:text-gray-500">日期</span>
+            <input type="date" id="quoteDate"
+              class="text-sm border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 outline-none" />
+          </div>
+          <div class="flex items-center gap-2 justify-end">
+            <span class="text-xs text-gray-400 dark:text-gray-500">有效期限</span>
+            <input type="date" id="validDate"
+              class="text-sm border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 outline-none" />
+          </div>
+        </div>
+      </div>
+
+      <hr class="border-gray-100 dark:border-gray-700" />
+
+      <!-- 發件方 & 客戶 -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <!-- 發件方 -->
+        <div class="space-y-3">
+          <h3 class="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">發件方</h3>
+          <input id="fromCompany" type="text" placeholder="公司 / 個人名稱" value="我的工作室"
+            class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 outline-none font-semibold" />
+          <input id="fromEmail" type="email" placeholder="Email"
+            class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 outline-none" />
+          <input id="fromPhone" type="text" placeholder="電話"
+            class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 outline-none" />
+          <input id="fromAddress" type="text" placeholder="地址"
+            class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 outline-none" />
+        </div>
+        <!-- 客戶 -->
+        <div class="space-y-3">
+          <h3 class="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">報價對象</h3>
+          <input id="toCompany" type="text" placeholder="客戶公司名稱"
+            class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 outline-none font-semibold" />
+          <input id="toContact" type="text" placeholder="聯絡人"
+            class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 outline-none" />
+          <input id="toEmail" type="email" placeholder="Email"
+            class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 outline-none" />
+          <input id="toAddress" type="text" placeholder="地址"
+            class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 outline-none" />
+        </div>
+      </div>
+
+      <hr class="border-gray-100 dark:border-gray-700" />
+
+      <!-- 服務項目表格 -->
+      <div>
+        <h3 class="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-4">服務項目</h3>
+
+        <!-- 表頭 -->
+        <div class="hidden sm:grid grid-cols-12 gap-2 mb-2 px-1">
+          <div class="col-span-5 text-xs text-gray-400 dark:text-gray-500">項目說明</div>
+          <div class="col-span-2 text-xs text-gray-400 dark:text-gray-500 text-center">數量</div>
+          <div class="col-span-2 text-xs text-gray-400 dark:text-gray-500 text-center">單位</div>
+          <div class="col-span-2 text-xs text-gray-400 dark:text-gray-500 text-right">單價</div>
+          <div class="col-span-1"></div>
+        </div>
+
+        <!-- 項目列表 -->
+        <div id="itemsList" class="space-y-2"></div>
+
+        <!-- 新增按鈕 -->
+        <button onclick="addItem()" class="no-print mt-3 w-full border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg py-3 text-sm text-gray-400 dark:text-gray-500 hover:border-blue-400 hover:text-blue-500 dark:hover:border-blue-500 dark:hover:text-blue-400 transition-colors">
+          + 新增服務項目
+        </button>
+      </div>
+
+      <hr class="border-gray-100 dark:border-gray-700" />
+
+      <!-- 合計區塊 -->
+      <div class="flex flex-col sm:flex-row gap-6 justify-between">
+        <!-- 備註 -->
+        <div class="flex-1">
+          <h3 class="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-2">備註</h3>
+          <textarea id="notes" rows="4" placeholder="付款方式、備注事項..."
+            class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
+        </div>
+
+        <!-- 金額摘要 -->
+        <div class="sm:w-64 space-y-2">
+          <div class="flex justify-between text-sm text-gray-500 dark:text-gray-400">
+            <span>小計</span>
+            <span id="subtotalDisplay">NT$ 0</span>
+          </div>
+          <div class="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
+            <span>稅率</span>
+            <select id="taxRate" onchange="recalculate()"
+              class="border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 text-xs bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 outline-none">
+              <option value="0">0%</option>
+              <option value="0.05">5%</option>
+              <option value="0.1" selected>10%</option>
+            </select>
+          </div>
+          <div class="flex justify-between text-sm text-gray-500 dark:text-gray-400">
+            <span>稅額</span>
+            <span id="taxDisplay">NT$ 0</span>
+          </div>
+          <hr class="border-gray-200 dark:border-gray-700" />
+          <div class="flex justify-between text-lg font-bold text-gray-800 dark:text-white">
+            <span>總計</span>
+            <span id="totalDisplay" class="text-blue-600 dark:text-blue-400">NT$ 0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 簽名區 -->
+      <div class="grid grid-cols-2 gap-8 pt-4">
+        <div class="text-center">
+          <div class="border-t border-gray-300 dark:border-gray-600 pt-2">
+            <p class="text-xs text-gray-400 dark:text-gray-500">發件方簽名</p>
+          </div>
+        </div>
+        <div class="text-center">
+          <div class="border-t border-gray-300 dark:border-gray-600 pt-2">
+            <p class="text-xs text-gray-400 dark:text-gray-500">客戶確認簽名</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    // 初始化
+    function init() {
+      document.getElementById('quoteNumber').textContent = generateQuoteNumber();
+      const today = new Date();
+      document.getElementById('quoteDate').value = formatDate(today);
+      const valid = new Date(today);
+      valid.setDate(valid.getDate() + 30);
+      document.getElementById('validDate').value = formatDate(valid);
+      addItem();
+      addItem();
+    }
+
+    function generateQuoteNumber() {
+      const now = new Date();
+      const date = now.toISOString().slice(0,10).replace(/-/g,'');
+      const rand = Math.random().toString(36).substring(2,6).toUpperCase();
+      return `QT-${date}-${rand}`;
+    }
+
+    function formatDate(d) {
+      return d.toISOString().slice(0,10);
+    }
+
+    // 主題切換
+    let isDark = false;
+    function toggleTheme() {
+      isDark = !isDark;
+      document.documentElement.classList.toggle('dark', isDark);
+      document.getElementById('themeIcon').textContent = isDark ? '☀️' : '🌙';
+    }
+
+    // 服務項目
+    let itemCount = 0;
+
+    function addItem() {
+      itemCount++;
+      const id = itemCount;
+      const container = document.getElementById('itemsList');
+      const row = document.createElement('div');
+      row.id = `item-${id}`;
+      row.className = 'grid grid-cols-12 gap-2 items-center bg-gray-50 dark:bg-gray-700 rounded-lg p-2';
+      row.innerHTML = `
+        <div class="col-span-12 sm:col-span-5">
+          <input type="text" placeholder="服務 / 產品說明"
+            class="w-full border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
+            oninput="recalculate()" />
+        </div>
+        <div class="col-span-4 sm:col-span-2">
+          <input type="number" placeholder="1" min="0" value="1"
+            class="w-full border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 outline-none text-center"
+            oninput="recalculate()" />
+        </div>
+        <div class="col-span-4 sm:col-span-2">
+          <input type="text" placeholder="式" value="式"
+            class="w-full border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 outline-none text-center" />
+        </div>
+        <div class="col-span-3 sm:col-span-2">
+          <input type="number" placeholder="0" min="0" value="0"
+            class="w-full border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 outline-none text-right"
+            oninput="recalculate()" />
+        </div>
+        <div class="col-span-1 flex justify-center no-print">
+          <button onclick="removeItem(${id})" class="text-gray-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 transition-colors text-lg leading-none">×</button>
+        </div>
+        <div class="col-span-12 sm:col-span-11 flex justify-end">
+          <span class="item-subtotal text-xs text-gray-400 dark:text-gray-500 font-mono">NT$ 0</span>
+        </div>
+      `;
+      container.appendChild(row);
+      recalculate();
+    }
+
+    function removeItem(id) {
+      const el = document.getElementById(`item-${id}`);
+      if (el) el.remove();
+      recalculate();
+    }
+
+    function recalculate() {
+      let subtotal = 0;
+      document.querySelectorAll('#itemsList > div').forEach(row => {
+        const inputs = row.querySelectorAll('input[type="number"]');
+        const qty = parseFloat(inputs[0]?.value) || 0;
+        const price = parseFloat(inputs[1]?.value) || 0;
+        const lineTotal = qty * price;
+        subtotal += lineTotal;
+        const label = row.querySelector('.item-subtotal');
+        if (label) label.textContent = `NT$ ${lineTotal.toLocaleString()}`;
+      });
+
+      const taxRate = parseFloat(document.getElementById('taxRate').value) || 0;
+      const tax = subtotal * taxRate;
+      const total = subtotal + tax;
+
+      document.getElementById('subtotalDisplay').textContent = `NT$ ${subtotal.toLocaleString()}`;
+      document.getElementById('taxDisplay').textContent = `NT$ ${Math.round(tax).toLocaleString()}`;
+      document.getElementById('totalDisplay').textContent = `NT$ ${Math.round(total).toLocaleString()}`;
+    }
+
+    function resetForm() {
+      if (!confirm('確定要清空所有資料嗎？')) return;
+      document.getElementById('itemsList').innerHTML = '';
+      itemCount = 0;
+      document.getElementById('quoteNumber').textContent = generateQuoteNumber();
+      ['fromCompany','fromEmail','fromPhone','fromAddress',
+       'toCompany','toContact','toEmail','toAddress','notes'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = id === 'fromCompany' ? '我的工作室' : '';
+      });
+      addItem();
+      addItem();
+    }
+
+    init();
+  </script>
+</body>
+</html>
